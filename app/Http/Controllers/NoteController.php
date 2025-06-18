@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreNoteRequest;
+use App\Http\Requests\UpdateNoteRequest;
 use App\Models\Note;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class NoteController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+    public function index(): Response
     {
         $notes = auth()->user()->notes()->latest()->get();
         return Inertia::render('Dashboard', [
@@ -19,33 +23,27 @@ class NoteController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreNoteRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'nullable|string',
-        ]);
 
+        $validated = $request->validated();
         $note = auth()->user()->notes()->create($validated);
 
         return redirect()->route('dashboard')->with('success', 'Note created successfully.');
     }
 
-    public function update(Request $request, Note $note)
+    public function update(UpdateNoteRequest $request, Note $note): RedirectResponse
     {
         $this->authorize('update', $note);
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $note->update($validated);
 
         return redirect()->back()->with('success', 'Note updated successfully.');
     }
 
-    public function destroy(Note $note)
+    public function destroy(Note $note): RedirectResponse
     {
         $this->authorize('delete', $note);
 
